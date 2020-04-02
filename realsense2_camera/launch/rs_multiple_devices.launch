@@ -1,0 +1,65 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="serial_no_camera1"    			default="934222070799"/> 			<!-- Note: Replace with actual serial number -->
+  <arg name="serial_no_camera2"    			default="937622070876"/> 			<!-- Note: Replace with actual serial number -->
+  <arg name="serial_no_camera3"    			default=""/> 			<!-- Note: Replace with actual serial number -->
+  <arg name="camera1"              			default="rigth"/>		<!-- Note: Replace with camera name -->
+  <arg name="camera2"              			default="left"/>		<!-- Note: Replace with camera name -->
+  <arg name="camera3"              			default="camera3"/>		<!-- Note: Replace with camera name -->
+  <arg name="tf_prefix_camera1"         default="$(arg camera1)"/>
+  <arg name="tf_prefix_camera2"         default="$(arg camera2)"/>
+  <arg name="tf_prefix_camera3"         default="$(arg camera3)"/>
+  <arg name="initial_reset"             default="false"/>
+
+  <!-- <node pkg="dynamic_reconfigure" type="dynparam" name="$(arg camera1)_load_rgb" 
+	  args="load /$(arg camera1)/rgb_camera $(find synkar_master)/config/rgb.yaml" />
+
+  <node pkg="dynamic_reconfigure" type="dynparam" name="$(arg camera2)_load_rgb" 
+	  args="load /$(arg camera2)/rgb_camera $(find synkar_master)/config/rgb.yaml" /> -->
+
+  <node pkg="dynamic_reconfigure" type="dynparam" name="$(arg camera1)_load_stereo" 
+	  args="load /$(arg camera1)/stereo_module $(find synkar_master)/config/stereo_master.yaml" />
+
+  <node pkg="dynamic_reconfigure" type="dynparam" name="$(arg camera2)_load_stereo" 
+	  args="load /$(arg camera2)/stereo_module $(find synkar_master)/config/stereo_slave.yaml" />
+
+  <group ns="$(arg camera1)">
+    <remap from="/$(arg camera1)/color/camera_info" to="camera_info_"/>
+    <include file="$(find realsense2_camera)/launch/includes/nodelet.launch.xml">
+      <arg name="serial_no"             value="$(arg serial_no_camera1)"/>/
+      <arg name="tf_prefix"         		value="$(arg tf_prefix_camera1)"/>
+      <arg name="initial_reset"         value="$(arg initial_reset)"/>
+    </include>
+  </group>
+
+  <group ns="$(arg camera1)/color">
+        <param name="/yaml_fname"       type="str"  value="$(find synkar_master)/config/$(arg serial_no_camera1).yaml"/>
+        <param name="/cam_info_topic"   type="str"  value="/$(arg camera1)/camera_info_"/>
+        <node pkg="camera_info_publisher"  type="yaml_to_camera_info_publisher.py" name="camera_info_publisher" output="screen" />
+  </group>
+
+
+
+  <group ns="$(arg camera2)">
+    <remap from="/$(arg camera2)/color/camera_info" to="camera_info_"/>
+    <include file="$(find realsense2_camera)/launch/includes/nodelet.launch.xml">
+      <arg name="serial_no"             value="$(arg serial_no_camera2)"/>
+      <arg name="tf_prefix"		          value="$(arg tf_prefix_camera2)"/>
+      <arg name="initial_reset"         value="$(arg initial_reset)"/>
+    </include>
+  </group>
+
+  <group ns="$(arg camera2)/color">
+        <param name="/yaml_fname"       type="str"  value="$(find synkar_master)/config/$(arg serial_no_camera2).yaml"/>
+        <param name="/cam_info_topic"   type="str"  value="/$(arg camera2)/camera_info_"/>
+        <node pkg="camera_info_publisher"  type="yaml_to_camera_info_publisher.py" name="camera_info_publisher" output="screen" />
+  </group>
+
+  <group ns="$(arg camera3)" if="$(eval serial_no_camera3 != '')">
+    <include file="$(find realsense2_camera)/launch/includes/nodelet.launch.xml">
+      <arg name="serial_no"             value="$(arg serial_no_camera3)"/>
+      <arg name="tf_prefix"		          value="$(arg tf_prefix_camera3)"/>
+      <arg name="initial_reset"         value="$(arg initial_reset)"/>
+    </include>
+  </group>
+</launch>
